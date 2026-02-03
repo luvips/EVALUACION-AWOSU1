@@ -1,14 +1,14 @@
-CREATE SCHEMA university;
+CREATE SCHEMA IF NOT EXISTS university;
 
 -- profes
-CREATE TABLE teachers (
+CREATE TABLE IF NOT EXISTS teachers (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL
 );
 
 -- cursos
-CREATE TABLE courses (
+CREATE TABLE IF NOT EXISTS courses (
     id SERIAL PRIMARY KEY,
     code VARCHAR(20) UNIQUE NOT NULL,
     name VARCHAR(100) NOT NULL,
@@ -16,7 +16,7 @@ CREATE TABLE courses (
 );
 
 -- estudiantes 
-CREATE TABLE students (
+CREATE TABLE IF NOT EXISTS students (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE students (
 );
 
 --  grupos
-CREATE TABLE groups (
+CREATE TABLE IF NOT EXISTS groups (
     id SERIAL PRIMARY KEY,
     course_id INT NOT NULL REFERENCES courses(id),
     teacher_id INT NOT NULL REFERENCES teachers(id),
@@ -34,16 +34,16 @@ CREATE TABLE groups (
 );
 
 -- inscripciones 
-CREATE TABLE enrollments (
+CREATE TABLE IF NOT EXISTS enrollments (
     id SERIAL PRIMARY KEY,
     student_id INT NOT NULL REFERENCES students(id) ON DELETE CASCADE,
     group_id INT NOT NULL REFERENCES groups(id),
-    enrolled_at VARCHAR(30) NOT NULL, 
+    enrolled_at DATE NOT NULL, 
     UNIQUE(student_id, group_id) 
 );
 
 --  calificaciones
-CREATE TABLE grades (
+CREATE TABLE IF NOT EXISTS grades (
     id SERIAL PRIMARY KEY,
     enrollment_id INT UNIQUE NOT NULL REFERENCES enrollments(id) ON DELETE CASCADE,
     partial1 DECIMAL(5,2) CHECK (partial1 BETWEEN 0 AND 100),
@@ -52,9 +52,9 @@ CREATE TABLE grades (
 );
 
 --  asistencia
-CREATE TABLE attendance (
+CREATE TABLE IF NOT EXISTS attendance (
     id SERIAL PRIMARY KEY,
     enrollment_id INT NOT NULL REFERENCES enrollments(id) ON DELETE CASCADE,
-    date VARCHAR(30) NOT NULL, 
+    date DATE NOT NULL, 
     present BOOLEAN DEFAULT FALSE
 );
