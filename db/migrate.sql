@@ -1,8 +1,6 @@
 \set ON_ERROR_STOP on
 
--- Ejecuta scripts en orden controlado
-\i /db/schema.sql
-\i /db/seed.sql
-\i /db/reports_vw.sql
-\i /db/indexes.sql
-\i /db/roles.sql
+\i /docker-entrypoint-initdb.d/1-schema.sql
+\i /docker-entrypoint-initdb.d/2-seed.sql
+\i /docker-entrypoint-initdb.d/3-reports_vw.sql
+\i /docker-entrypoint-initdb.d/4-indexes.sql
