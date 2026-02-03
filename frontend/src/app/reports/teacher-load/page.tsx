@@ -2,7 +2,9 @@ import { query } from '@/lib/db';
 import DataTable from '@/components/DataTable';
 import KPICard from '@/components/KPICard';
 import PaginationButtons from '@/components/PaginationButtons';
-import { getPaginationParams, getPaginationOffsetLimit } from '@/lib/pagination';
+import SearchFilter from '@/components/SearchFilter';
+import { DEFAULT_PAGE_LIMIT, getPaginationParams, getPaginationOffsetLimit } from '@/lib/pagination';
+import { SearchSchema } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,20 +13,37 @@ export default async function TeacherLoadPage({
 }: {
   searchParams: Promise<Record<string, string>>
 }) {
-  const limit = 10;
+  const limit = DEFAULT_PAGE_LIMIT;
   const resolvedSearchParams = await searchParams;
+
+  const validated = SearchSchema.safeParse(resolvedSearchParams);
+  const filters = validated.success ? validated.data : {};
+
   const pagination = getPaginationParams(resolvedSearchParams);
   const { offset } = getPaginationOffsetLimit(pagination.page, limit);
 
-  // Total de registros
-  const totalRes = await query('SELECT COUNT(*) as count FROM vw_teacher_load');
+  const conditions: string[] = [];
+  const params: any[] = [];
+  let paramIndex = 1;
+
+  if (filters.query) {
+    conditions.push(`teacher_name ILIKE $${paramIndex}`);
+    params.push(`%${filters.query}%`);
+    paramIndex++;
+  }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const totalRes = await query(
+    `SELECT COUNT(*) as count FROM vw_teacher_load ${whereClause}`,
+    params
+  );
   const total = parseInt(totalRes.rows[0].count, 10);
   const totalPages = Math.ceil(total / limit);
 
-  // Datos paginados
   const res = await query(
-    'SELECT * FROM vw_teacher_load ORDER BY students_total DESC LIMIT $1 OFFSET $2',
-    [limit, offset]
+    `SELECT * FROM vw_teacher_load ${whereClause} ORDER BY students_total DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
+    [...params, limit, offset]
   );
 
   const data = res.rows.map((row: any) => ({
@@ -37,11 +56,13 @@ export default async function TeacherLoadPage({
     'Prom. Est/Grupo': row.avg_students_per_group
   }));
 
-  // Calcular KPIs con todos los datos
-  const allRes = await query('SELECT * FROM vw_teacher_load');
-  const totalMaestros = allRes.rows.length;
-  const totalGrupos = allRes.rows.reduce((sum: number, row: any) => sum + parseInt(row.groups_count), 0);
-  const totalEstudiantes = allRes.rows.reduce((sum: number, row: any) => sum + parseInt(row.students_total), 0);
+  const kpiRes = await query(
+    `SELECT * FROM vw_teacher_load ${whereClause}`,
+    params
+  );
+  const totalMaestros = kpiRes.rows.length;
+  const totalGrupos = kpiRes.rows.reduce((sum: number, row: any) => sum + parseInt(row.groups_count), 0);
+  const totalEstudiantes = kpiRes.rows.reduce((sum: number, row: any) => sum + parseInt(row.students_total), 0);
 
   return (
     <div className="p-10 bg-white min-h-screen">
@@ -53,6 +74,10 @@ export default async function TeacherLoadPage({
         { label: 'Total Grupos', value: totalGrupos },
         { label: 'Total Estudiantes', value: totalEstudiantes }
       ]} />
+
+      <div className="mb-4">
+        <SearchFilter placeholder="Buscar por nombre del maestro..." />
+      </div>
 
       <DataTable title="" columns={['ID', 'Maestro', 'Período', 'Grupos', 'Estudiantes', 'Prom. Curso', 'Prom. Est/Grupo']} data={data} />
       <PaginationButtons page={pagination.page} totalPages={totalPages} limit={limit} />

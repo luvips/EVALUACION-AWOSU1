@@ -2,7 +2,9 @@ import { query } from '@/lib/db';
 import DataTable from '@/components/DataTable';
 import KPICard from '@/components/KPICard';
 import PaginationButtons from '@/components/PaginationButtons';
-import { getPaginationParams, getPaginationOffsetLimit } from '@/lib/pagination';
+import SearchFilter from '@/components/SearchFilter';
+import { DEFAULT_PAGE_LIMIT, getPaginationParams, getPaginationOffsetLimit } from '@/lib/pagination';
+import { SearchSchema } from '@/lib/validation';
 
 export const dynamic = 'force-dynamic';
 
@@ -11,20 +13,37 @@ export default async function StudentsAtRiskPage({
 }: {
   searchParams: Promise<Record<string, string>>
 }) {
-  const limit = 10;
+  const limit = DEFAULT_PAGE_LIMIT;
   const resolvedSearchParams = await searchParams;
+
+  const validated = SearchSchema.safeParse(resolvedSearchParams);
+  const filters = validated.success ? validated.data : {};
+
   const pagination = getPaginationParams(resolvedSearchParams);
   const { offset } = getPaginationOffsetLimit(pagination.page, limit);
 
-  // Total de registros
-  const totalRes = await query('SELECT COUNT(*) as count FROM vw_students_at_risk');
+  const conditions: string[] = [];
+  const params: any[] = [];
+  let paramIndex = 1;
+
+  if (filters.query) {
+    conditions.push(`(student_name ILIKE $${paramIndex} OR email ILIKE $${paramIndex})`);
+    params.push(`%${filters.query}%`);
+    paramIndex++;
+  }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const totalRes = await query(
+    `SELECT COUNT(*) as count FROM vw_students_at_risk ${whereClause}`,
+    params
+  );
   const total = parseInt(totalRes.rows[0].count, 10);
   const totalPages = Math.ceil(total / limit);
 
-  // Datos paginados
   const res = await query(
-    'SELECT * FROM vw_students_at_risk ORDER BY risk_score DESC LIMIT $1 OFFSET $2',
-    [limit, offset]
+    `SELECT * FROM vw_students_at_risk ${whereClause} ORDER BY risk_score DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
+    [...params, limit, offset]
   );
 
   const data = res.rows.map((row: any) => ({
@@ -37,11 +56,13 @@ export default async function StudentsAtRiskPage({
     'Riesgo': row.risk_score
   }));
 
-  // Calcular KPIs con todos los datos
-  const allRes = await query('SELECT * FROM vw_students_at_risk');
-  const totalEnRiesgo = allRes.rows.length;
-  const riesgoCritico = allRes.rows.filter((row: any) => parseInt(row.risk_score) >= 7).length;
-  const bajoPromedio = allRes.rows.filter((row: any) => row.risk_reason?.includes('promedio')).length;
+  const kpiRes = await query(
+    `SELECT * FROM vw_students_at_risk ${whereClause}`,
+    params
+  );
+  const totalEnRiesgo = kpiRes.rows.length;
+  const riesgoCritico = kpiRes.rows.filter((row: any) => parseInt(row.risk_score) >= 3).length;
+  const bajoPromedio = kpiRes.rows.filter((row: any) => row.risk_reason?.includes('Bajo promedio')).length;
 
   return (
     <div className="p-10 bg-white min-h-screen">
@@ -50,9 +71,13 @@ export default async function StudentsAtRiskPage({
 
       <KPICard kpis={[
         { label: 'Total en Riesgo', value: totalEnRiesgo },
-        { label: 'Riesgo Crítico (≥7)', value: riesgoCritico },
+        { label: 'Riesgo Crítico (≥3)', value: riesgoCritico },
         { label: 'Por Bajo Promedio', value: bajoPromedio }
       ]} />
+
+      <div className="mb-4">
+        <SearchFilter placeholder="Buscar por nombre o email..." />
+      </div>
 
       <DataTable title="" columns={['Estudiante', 'Email', 'Programa', 'Promedio', 'Asistencia', 'Razón', 'Riesgo']} data={data} />
       <PaginationButtons page={pagination.page} totalPages={totalPages} limit={limit} />
