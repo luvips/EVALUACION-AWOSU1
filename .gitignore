@@ -1,0 +1,15 @@
+node_modules/
+.next/
+out/
+build/
+dist/
+.env.local
+.env.*.local
+.env.production.local
+*.pem
+.DS_Store
+*.log
+.idea/
+.vscode/
+*.swp
+*.swo
