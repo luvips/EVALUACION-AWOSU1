@@ -1,57 +1,45 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const reports = [
-  {
-    title: "Rendimiento por curso",
-    description: "Promedios y reprobación por curso y periodo.",
-    href: "/reports/course-performance",
-  },
-  {
-    title: "Carga docente",
-    description: "Grupos, alumnos y promedio por docente.",
-    href: "/reports/teacher-load",
-  },
-  {
-    title: "Alumnos en riesgo",
-    description: "Promedio o asistencia baja con búsqueda y paginación.",
-    href: "/reports/students-at-risk",
-  },
-  {
-    title: "Asistencia por grupo",
-    description: "Porcentaje promedio de asistencia por grupo.",
-    href: "/reports/attendance-by-group",
-  },
-  {
-    title: "Ranking por programa",
-    description: "Ranking de alumnos por programa y periodo.",
-    href: "/reports/rank-students",
-  },
+  { title: "Asistencia por Grupo", path: "/reports/attendance-by-group", description: "Porcentaje de asistencia por grupo" },
+  { title: "Rendimiento del Curso", path: "/reports/course-performance", description: "Calificaciones y tasas de reprobación" },
+  { title: "Ranking de Estudiantes", path: "/reports/rank-students", description: "Estudiantes ordenados por promedio" },
+  { title: "Estudiantes en Riesgo", path: "/reports/students-at-risk", description: "Estudiantes con bajo desempeño o asistencia" },
+  { title: "Carga Docente", path: "/reports/teacher-load", description: "Cursos y estudiantes por profesor" }
 ];
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <main className="mx-auto max-w-6xl px-6 py-10">
-        <header className="mb-8 space-y-2">
-          <h1 className="text-3xl font-semibold">Dashboard Awos</h1>
-          <p className="text-slate-600">
-            Selecciona un reporte para visualizar.
-          </p>
-        </header>
+    <div className="p-10 bg-white min-h-screen">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-4xl font-bold mb-4 text-[#6B00BF]">Dashboard de Reportes</h1>
+        <p className="text-gray-600 mb-12">Selecciona un reporte para visualizar los datos</p>
+        
+        <div className="flex gap-12">
+          <div className="flex-1 max-h-screen overflow-y-auto pr-4">
+            <div className="space-y-3">
+              {reports.map((report, i) => (
+                <Link key={i} href={report.path}>
+                  <div className="p-4 text-[#6B00BF] hover:bg-[#6B00BF] hover:text-white transition cursor-pointer">
+                    <h2 className="font-bold mb-1">{report.title}</h2>
+                    <p className="text-xs opacity-80">{report.description}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
 
-        <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {reports.map((report) => (
-            <Link
-              key={report.href}
-              href={report.href}
-              className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-            >
-              <h2 className="text-lg font-semibold">{report.title}</h2>
-              <p className="mt-2 text-sm text-slate-600">{report.description}</p>
-            </Link>
-          ))}
-        </section>
-      </main>
+          <div className="w-96 flex items-center justify-center flex-shrink-0">
+            <Image 
+              src="/gatito.png" 
+              alt="gatito" 
+              width={380} 
+              height={380}
+            />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
