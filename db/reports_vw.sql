@@ -75,39 +75,22 @@ HAVING AVG(COALESCE(gr.final, 0)) < 70 OR AVG(CASE WHEN ast.total_classes > 0 TH
 
 
 -- View 4: vw_attendance_by_group
-
 CREATE OR REPLACE VIEW vw_attendance_by_group AS
-
-SELECT
-
-    g.id AS group_id,
-
+SELEC
+    g.id AS group_id
     c.code AS course_code,
-
     c.name AS course_name,
-
     g.term,
-
     COUNT(a.id) AS total_sessions,
-
     SUM(CASE WHEN a.present THEN 1 ELSE 0 END) AS present_sessions,
-
     COALESCE(
-
         ROUND(100.0 * SUM(CASE WHEN a.present THEN 1 ELSE 0 END) / NULLIF(COUNT(a.id), 0), 2),
-
         0
-
     ) AS attendance_pct
-
 FROM groups g
-
 JOIN courses c ON g.course_id = c.id
-
 JOIN enrollments e ON g.id = e.group_id
-
 LEFT JOIN attendance a ON e.id = a.enrollment_id
-
 GROUP BY g.id, c.code, c.name, g.term;
 
 -- View 5: vw_rank_students
