@@ -3,6 +3,8 @@ export interface PaginationParams {
   limit: number;
 }
 
+export const DEFAULT_PAGE_LIMIT = 6;
+
 export interface PaginatedResponse<T> {
   data: T[];
   total: number;
@@ -13,7 +15,7 @@ export interface PaginatedResponse<T> {
 
 export function getPaginationParams(searchParams: Record<string, string>): PaginationParams {
   const page = parseInt(searchParams.page || '1', 10);
-  const limit = parseInt(searchParams.limit || '10', 10);
+  const limit = parseInt(searchParams.limit || String(DEFAULT_PAGE_LIMIT), 10);
 
   return {
     page: Math.max(1, page),
