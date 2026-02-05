@@ -1,11 +1,31 @@
 import { query } from '@/lib/db';
 import DataTable from '@/components/DataTable';
 import KPICard from '@/components/KPICard';
+import PaginationButtons from '@/components/PaginationButtons';
+import { getPaginationParams, getPaginationOffsetLimit } from '@/lib/pagination';
 
 export const dynamic = 'force-dynamic';
 
-export default async function CoursePerformancePage() {
-  const res = await query('SELECT * FROM vw_course_performance ORDER BY fail_rate_pct DESC');
+export default async function CoursePerformancePage({
+  searchParams
+}: {
+  searchParams: Promise<Record<string, string>>
+}) {
+  const limit = 10;
+  const resolvedSearchParams = await searchParams;
+  const pagination = getPaginationParams(resolvedSearchParams);
+  const { offset } = getPaginationOffsetLimit(pagination.page, limit);
+
+  // Total de registros
+  const totalRes = await query('SELECT COUNT(*) as count FROM vw_course_performance');
+  const total = parseInt(totalRes.rows[0].count, 10);
+  const totalPages = Math.ceil(total / limit);
+
+  // Datos paginados
+  const res = await query(
+    'SELECT * FROM vw_course_performance ORDER BY fail_rate_pct DESC LIMIT $1 OFFSET $2',
+    [limit, offset]
+  );
 
   const data = res.rows.map((row: any) => ({
     'Código': row.course_code,
@@ -18,12 +38,13 @@ export default async function CoursePerformancePage() {
     '% Fallo': row.fail_rate_pct
   }));
 
-  // Calcular KPIs
-  const totalCursos = res.rows.length;
-  const promedioGeneral = res.rows.length > 0
-    ? (res.rows.reduce((sum: number, row: any) => sum + parseFloat(row.avg_final), 0) / res.rows.length).toFixed(1)
+  // Calcular KPIs con todos los datos
+  const allRes = await query('SELECT * FROM vw_course_performance');
+  const totalCursos = allRes.rows.length;
+  const promedioGeneral = allRes.rows.length > 0
+    ? (allRes.rows.reduce((sum: number, row: any) => sum + parseFloat(row.avg_final), 0) / allRes.rows.length).toFixed(1)
     : 0;
-  const totalReprobados = res.rows.reduce((sum: number, row: any) => sum + parseInt(row.failed_count), 0);
+  const totalReprobados = allRes.rows.reduce((sum: number, row: any) => sum + parseInt(row.failed_count), 0);
 
   return (
     <div className="p-10 bg-white min-h-screen">
@@ -37,6 +58,7 @@ export default async function CoursePerformancePage() {
       ]} />
 
       <DataTable title="" columns={['Código', 'Curso', 'Período', 'Programa', 'Estudiantes', 'Promedio', 'Reprobados', '% Fallo']} data={data} />
+      <PaginationButtons page={pagination.page} totalPages={totalPages} limit={limit} />
     </div>
   );
 }
