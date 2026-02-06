@@ -19,7 +19,7 @@ export default function StatusFilter({ options, label = 'Estado' }: StatusFilter
     
     if (status && status !== 'todos') {
       params.set('status', status);
-      params.set('page', '1'); // Reset a página 1 al filtrar
+      params.set('page', '1');
     } else {
       params.delete('status');
     }

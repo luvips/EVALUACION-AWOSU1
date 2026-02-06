@@ -18,7 +18,7 @@ export default function SearchFilter({ placeholder = 'Buscar...' }: SearchFilter
     
     if (term) {
       params.set('query', term);
-      params.set('page', '1'); // Reset a página 1 al buscar
+      params.set('page', '1');
     } else {
       params.delete('query');
     }
