@@ -4,7 +4,7 @@ import PaginationButtons from '@/components/PaginationButtons';
 import SearchFilter from '@/components/SearchFilter';
 import { DEFAULT_PAGE_LIMIT, getPaginationParams, getPaginationOffsetLimit } from '@/lib/pagination';
 import { SearchSchema } from '@/lib/validation';
-import { AttendanceService } from '@/services/reports/attendance.service';
+import { getAttendanceByGroup } from '@/actions/reports';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,10 +22,9 @@ export default async function AttendanceByGroupPage({
   const pagination = getPaginationParams(resolvedSearchParams);
   const { offset } = getPaginationOffsetLimit(pagination.page, limit);
 
-  const result = await AttendanceService.getByGroup(filters, { limit, offset });
-  const kpis = await AttendanceService.getKPIs(filters);
+  const result = await getAttendanceByGroup(filters, { limit, offset });
 
-  const data = result.data.map((row) => ({
+  const data = result.data.map((row: any) => ({
     'Curso': row.course_name,
     'Código': row.course_code,
     'Período': row.term,
@@ -34,15 +33,17 @@ export default async function AttendanceByGroupPage({
     '% Asistencia': `${row.attendance_pct}%`
   }));
 
+  const totalPages = Math.ceil(result.total / limit);
+
   return (
     <div className="p-10 bg-white min-h-screen">
       <h1 className="text-3xl font-bold mb-2 text-[#6B00BF]">Asistencia por Grupo</h1>
       <p className="text-sm text-gray-600 mb-6">Monitoreo de asistencia por curso y periodo</p>
 
       <KPICard kpis={[
-        { label: 'Total Grupos', value: kpis.totalGrupos },
-        { label: 'Asistencia Promedio', value: `${kpis.asistenciaPromedio}%` },
-        { label: 'Grupos <80%', value: kpis.gruposBajaAsistencia }
+        { label: 'Total Grupos', value: result.kpis.totalGrupos },
+        { label: 'Asistencia Promedio', value: `${result.kpis.asistenciaPromedio}%` },
+        { label: 'Grupos <80%', value: result.kpis.gruposBajaAsistencia }
       ]} />
 
       <div className="mb-4">
@@ -50,7 +51,7 @@ export default async function AttendanceByGroupPage({
       </div>
 
       <DataTable title="" columns={['Curso', 'Código', 'Período', 'Sesiones', 'Asistencias', '% Asistencia']} data={data} />
-      <PaginationButtons page={pagination.page} totalPages={result.totalPages} limit={limit} />
+      <PaginationButtons page={pagination.page} totalPages={totalPages} limit={limit} />
     </div>
   );
 }

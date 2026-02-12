@@ -4,7 +4,7 @@ import PaginationButtons from '@/components/PaginationButtons';
 import SearchFilter from '@/components/SearchFilter';
 import { DEFAULT_PAGE_LIMIT, getPaginationParams, getPaginationOffsetLimit } from '@/lib/pagination';
 import { SearchSchema } from '@/lib/validation';
-import { StudentsService } from '@/services/reports/students.service';
+import { getStudentsAtRisk } from '@/actions/reports';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,10 +22,9 @@ export default async function StudentsAtRiskPage({
   const pagination = getPaginationParams(resolvedSearchParams);
   const { offset } = getPaginationOffsetLimit(pagination.page, limit);
 
-  const result = await StudentsService.getAtRisk(filters, { limit, offset });
-  const kpis = await StudentsService.getAtRiskKPIs(filters);
+  const result = await getStudentsAtRisk(filters, { limit, offset });
 
-  const data = result.data.map((row) => ({
+  const data = result.data.map((row: any) => ({
     'Estudiante': row.student_name,
     'Email': row.email,
     'Programa': row.program,
@@ -35,15 +34,17 @@ export default async function StudentsAtRiskPage({
     'Riesgo': row.risk_score
   }));
 
+  const totalPages = Math.ceil(result.total / limit);
+
   return (
     <div className="p-10 bg-white min-h-screen">
       <h1 className="text-3xl font-bold mb-2 text-[#6B00BF]">Estudiantes en Riesgo</h1>
       <p className="text-sm text-gray-600 mb-6">Identificación de alumnos con bajo rendimiento o asistencia</p>
 
       <KPICard kpis={[
-        { label: 'Total en Riesgo', value: kpis.totalEnRiesgo },
-        { label: 'Riesgo Crítico (≥3)', value: kpis.riesgoCritico },
-        { label: 'Por Bajo Promedio', value: kpis.bajoPromedio }
+        { label: 'Total en Riesgo', value: result.kpis.totalEnRiesgo },
+        { label: 'Riesgo Crítico (≥3)', value: result.kpis.riesgoCritico },
+        { label: 'Por Bajo Promedio', value: result.kpis.bajoPromedio }
       ]} />
 
       <div className="mb-4">
@@ -51,7 +52,7 @@ export default async function StudentsAtRiskPage({
       </div>
 
       <DataTable title="" columns={['Estudiante', 'Email', 'Programa', 'Promedio', 'Asistencia', 'Razón', 'Riesgo']} data={data} />
-      <PaginationButtons page={pagination.page} totalPages={result.totalPages} limit={limit} />
+      <PaginationButtons page={pagination.page} totalPages={totalPages} limit={limit} />
     </div>
   );
 }

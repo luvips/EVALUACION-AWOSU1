@@ -9,7 +9,7 @@ app_user=$(escape "$DB_APP_USER")
 app_password=$(escape "$DB_APP_PASSWORD")
 db_name=$(escape "$POSTGRES_DB")
 
-sed \
+sed \f
   -e "s|__DB_APP_USER__|$app_user|g" \
   -e "s|__DB_APP_PASSWORD__|$app_password|g" \
   -e "s|__POSTGRES_DB__|$db_name|g" \

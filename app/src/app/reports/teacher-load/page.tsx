@@ -4,7 +4,7 @@ import PaginationButtons from '@/components/PaginationButtons';
 import SearchFilter from '@/components/SearchFilter';
 import { DEFAULT_PAGE_LIMIT, getPaginationParams, getPaginationOffsetLimit } from '@/lib/pagination';
 import { SearchSchema } from '@/lib/validation';
-import { TeachersService } from '@/services/reports/teachers.service';
+import { getTeacherLoad } from '@/actions/reports';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,10 +22,9 @@ export default async function TeacherLoadPage({
   const pagination = getPaginationParams(resolvedSearchParams);
   const { offset } = getPaginationOffsetLimit(pagination.page, limit);
 
-  const result = await TeachersService.getLoad(filters, { limit, offset });
-  const kpis = await TeachersService.getLoadKPIs(filters);
+  const result = await getTeacherLoad(filters, { limit, offset });
 
-  const data = result.data.map((row) => ({
+  const data = result.data.map((row: any) => ({
     'ID': row.teacher_id,
     'Maestro': row.teacher_name,
     'Período': row.term,
@@ -35,15 +34,17 @@ export default async function TeacherLoadPage({
     'Prom. Est/Grupo': row.avg_students_per_group
   }));
 
+  const totalPages = Math.ceil(result.total / limit);
+
   return (
     <div className="p-10 bg-white min-h-screen">
       <h1 className="text-3xl font-bold mb-2 text-[#6B00BF]">Carga Docente</h1>
       <p className="text-sm text-gray-600 mb-6">Distribución de grupos y estudiantes por maestro</p>
 
       <KPICard kpis={[
-        { label: 'Total Maestros', value: kpis.totalMaestros },
-        { label: 'Total Grupos', value: kpis.totalGrupos },
-        { label: 'Total Estudiantes', value: kpis.totalEstudiantes }
+        { label: 'Total Maestros', value: result.kpis.totalMaestros },
+        { label: 'Total Grupos', value: result.kpis.totalGrupos },
+        { label: 'Total Estudiantes', value: result.kpis.totalEstudiantes }
       ]} />
 
       <div className="mb-4">
@@ -51,7 +52,7 @@ export default async function TeacherLoadPage({
       </div>
 
       <DataTable title="" columns={['ID', 'Maestro', 'Período', 'Grupos', 'Estudiantes', 'Prom. Curso', 'Prom. Est/Grupo']} data={data} />
-      <PaginationButtons page={pagination.page} totalPages={result.totalPages} limit={limit} />
+      <PaginationButtons page={pagination.page} totalPages={totalPages} limit={limit} />
     </div>
   );
 }
