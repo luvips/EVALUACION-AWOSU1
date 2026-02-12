@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:14-alpine
-    container_name: awos-postgres
+    container_name: ${DB_CONTAINER_NAME:-awos-postgres}
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -10,7 +10,7 @@ services:
       DB_APP_USER: ${DB_APP_USER}
       DB_APP_PASSWORD: ${DB_APP_PASSWORD}
     ports:
-      - "5433:5432"
+      - "${POSTGRES_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/schema.sql:/docker-entrypoint-initdb.d/1-schema.sql
@@ -26,14 +26,20 @@ services:
       timeout: 5s
       retries: 5
   app:
-    build: ./frontend
-    container_name: awos-web
+    build:
+      context: ./frontend
+      args:
+        DATABASE_URL: postgresql://${DB_APP_USER}:${DB_APP_PASSWORD}@db:5432/${POSTGRES_DB}
+        NODE_ENV: ${NODE_ENV:-production}
+        PORT: ${APP_PORT:-3000}
+    container_name: ${APP_CONTAINER_NAME:-awos-web}
     restart: always
     ports:
-      - "3000:3000"
+      - "${APP_PORT:-3000}:${APP_PORT:-3000}"
     environment:
       DATABASE_URL: postgresql://${DB_APP_USER}:${DB_APP_PASSWORD}@db:5432/${POSTGRES_DB}
-      NODE_ENV: ${NODE_ENV}
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${APP_PORT:-3000}
     depends_on:
       db:
         condition: service_healthy

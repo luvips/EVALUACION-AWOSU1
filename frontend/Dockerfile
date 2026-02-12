@@ -1,9 +1,34 @@
+FROM node:20-alpine AS base
 
-FROM node:20-alpine
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm install
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
 RUN npm run build
-EXPOSE 3000
-CMD ["npm", "start"]
+
+FROM base AS runner
+WORKDIR /app
+ARG NODE_ENV=production
+ENV NODE_ENV=${NODE_ENV}
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+COPY --from=builder /app/public ./public
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+USER nextjs
+ARG PORT=3000
+EXPOSE ${PORT}
+ENV PORT=${PORT}
+ARG HOSTNAME=0.0.0.0
+ENV HOSTNAME=${HOSTNAME}
+CMD ["node", "server.js"]
