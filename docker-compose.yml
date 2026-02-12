@@ -1,5 +1,6 @@
 services:
   db:
+    env_file: .env
     image: postgres:14-alpine
     container_name: ${DB_CONTAINER_NAME:-awos-postgres}
     restart: unless-stopped
@@ -26,6 +27,7 @@ services:
       timeout: 5s
       retries: 5
   app:
+    env_file: .env
     build:
       context: ./app
       args:
