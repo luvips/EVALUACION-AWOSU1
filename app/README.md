@@ -7,6 +7,13 @@ Dashboard en Next.js que consume reportes desde VIEWS en PostgreSQL. La app corr
 - Docker y Docker Compose.
 - Archivo .env con las variables necesarias.
 
+## Clonar el Repositorio en la rama develop 
+
+```
+git clone -b develop https://github.com/luvips/EVALUACION-AWOSU1.git
+```
+
+
 ## Variables de entorno
 
 Usa el archivo .env (puedes copiar .env.example):
