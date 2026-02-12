@@ -4,7 +4,7 @@ import PaginationButtons from '@/components/PaginationButtons';
 import DropdownFilter from '@/components/DropdownFilter';
 import { DEFAULT_PAGE_LIMIT, getPaginationParams, getPaginationOffsetLimit } from '@/lib/pagination';
 import { RankStudentsFilterSchema } from '@/lib/validation';
-import { getRankStudents, getRankFilters } from '@/actions/reports';
+import { getRankStudents, getRankFilters } from '@/actions/students';
 
 export const dynamic = 'force-dynamic';
 

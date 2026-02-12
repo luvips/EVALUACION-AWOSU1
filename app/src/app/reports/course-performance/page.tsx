@@ -4,7 +4,7 @@ import PaginationButtons from '@/components/PaginationButtons';
 import DropdownFilter from '@/components/DropdownFilter';
 import { DEFAULT_PAGE_LIMIT, getPaginationParams, getPaginationOffsetLimit } from '@/lib/pagination';
 import { CoursePerformanceFilterSchema } from '@/lib/validation';
-import { getCoursePerformance, getCourseFilters } from '@/actions/reports';
+import { getCoursePerformance, getCourseFilters } from '@/actions/courses';
 
 export const dynamic = 'force-dynamic';
 

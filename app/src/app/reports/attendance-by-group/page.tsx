@@ -4,7 +4,7 @@ import PaginationButtons from '@/components/PaginationButtons';
 import SearchFilter from '@/components/SearchFilter';
 import { DEFAULT_PAGE_LIMIT, getPaginationParams, getPaginationOffsetLimit } from '@/lib/pagination';
 import { SearchSchema } from '@/lib/validation';
-import { getAttendanceByGroup } from '@/actions/reports';
+import { getAttendanceByGroup } from '@/actions/attendance';
 
 export const dynamic = 'force-dynamic';
 

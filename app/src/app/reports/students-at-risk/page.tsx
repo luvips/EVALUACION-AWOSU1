@@ -4,7 +4,7 @@ import PaginationButtons from '@/components/PaginationButtons';
 import SearchFilter from '@/components/SearchFilter';
 import { DEFAULT_PAGE_LIMIT, getPaginationParams, getPaginationOffsetLimit } from '@/lib/pagination';
 import { SearchSchema } from '@/lib/validation';
-import { getStudentsAtRisk } from '@/actions/reports';
+import { getStudentsAtRisk } from '@/actions/students';
 
 export const dynamic = 'force-dynamic';
 
